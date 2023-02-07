@@ -1,8 +1,8 @@
 [run]
-source = project_name
+source = ateltaapi
 
 [report]
 omit =
     */python?.?/*
     */site-packages/nose/*
-    project_name/__main__.py
+    ateltaapi/__main__.py

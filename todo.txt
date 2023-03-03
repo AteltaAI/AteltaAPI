@@ -1,0 +1,9 @@
+Functions to implemet in sdk 
+
+- get_angle()
+- _find_angle() <- implemted inside get_angle() 
+
+Documentation pending for each of the function in the sdk 
+
+# This is typically a stream processing. So better to use a async queues like celery
+# Better ways to do the same might be apache flink. 

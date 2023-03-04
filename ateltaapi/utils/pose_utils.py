@@ -91,6 +91,6 @@ def pose_matching_fastdtw(
 
     distance, _ = fastdtw(instructor_angles, student_angles, dist=euclidean)
     match = distance < fastdtw_evaluation_threshold
-
+    node_color =  "green" if match else "red"
     # might be another parameter to consider : Whether to take screen shot or not 
-    return {"distance": distance, "match": match, "color": "green" if match else "red"}
+    return {"distance": distance, "match": match, "color": node_color}

@@ -59,57 +59,73 @@ async def calculate(request_body: ContentRequest):
     joint_angles = get_angle(keypoints_arr)
 
     # A very naive solution
+    # check if the keypoints got extend or not 
 
-    STUDENT_BATCH.append(joint_angles.tolist())
-    INSTRUCTOR_BATCH.append(instructor_annotations[str(frame_num)]["angle"])
-
-    if len(STUDENT_BATCH) == BATCHLIMIT:
-        student_angles = STUDENT_BATCH.copy()
-        instructor_angles = INSTRUCTOR_BATCH.copy()
-
-        STUDENT_BATCH.clear()
-        INSTRUCTOR_BATCH.clear()
-        evaluation_match_results = pose_matching_fastdtw(
-            instructor_angles=instructor_angles, 
-            student_angles=student_angles
-        )
-
-        score, is_matched, node_color = list(evaluation_match_results.values())
-        
-        # we did not set up any optimised way to set up reward methadology. This is just some random positive and negative rewards
-        if is_matched:
-            DOING_GOOD_COUNTER += 1
-        else:
-            DOING_GOOD_COUNTER -= 10
-        
-        if DOING_GOOD_COUNTER < 500 and DOING_GOOD_COUNTER > 100:
-            title = accomplishment[0]
-        elif DOING_GOOD_COUNTER > 500:
-            title = accomplishment[1]
-        elif DOING_GOOD_COUNTER < 100:
-            title = ""
-        else:
-            title = accomplishment[2]
-
-        response = {
-            "response_status": 200,
-            "frame_num": frame_num,
-            "score" : DOING_GOOD_COUNTER, 
-            "node_color" : node_color, 
-            "accomplishment": title
-
-        }
-
-        print(score)
-        print(response)
-        print("\n")
-
-        return response
-    else:
+    total_frames = int(list(instructor_annotations.keys())[-1])
+    if frame_num > total_frames:
         return {
             "response_status" : 102, 
-            "message": "Did not received enough number of keypoints to calcuate"
+            "message": "Keypoints exceeded Restart"
         }
+    
+    try:
+        STUDENT_BATCH.append(joint_angles.tolist())
+        INSTRUCTOR_BATCH.append(instructor_annotations[str(frame_num)]["angle"])
+
+        if len(STUDENT_BATCH) == BATCHLIMIT:
+            student_angles = STUDENT_BATCH.copy()
+            instructor_angles = INSTRUCTOR_BATCH.copy()
+
+            STUDENT_BATCH.clear()
+            INSTRUCTOR_BATCH.clear()
+            evaluation_match_results = pose_matching_fastdtw(
+                instructor_angles=instructor_angles, 
+                student_angles=student_angles
+            )
+
+            score, is_matched, node_color = list(evaluation_match_results.values())
+            
+            # we did not set up any optimised way to set up reward methadology. This is just some random positive and negative rewards
+            if is_matched:
+                DOING_GOOD_COUNTER += 1
+            else:
+                DOING_GOOD_COUNTER -= 10
+            
+            if DOING_GOOD_COUNTER < 500 and DOING_GOOD_COUNTER > 100:
+                title = accomplishment[0]
+            elif DOING_GOOD_COUNTER > 500:
+                title = accomplishment[1]
+            elif DOING_GOOD_COUNTER < 100:
+                title = ""
+            else:
+                title = accomplishment[2]
+
+            response = {
+                "response_status": 200,
+                "frame_num": frame_num,
+                "score" : DOING_GOOD_COUNTER, 
+                "node_color" : node_color, 
+                "accomplishment": title
+
+            }
+
+            print(score)
+            print(response)
+            print("\n")
+
+            return response
+        else:
+            return {
+                "response_status" : 102, 
+                "message": "Did not received enough number of keypoints to calcuate"
+            }
+    except:
+        error_response = {
+            "response_status" : 500, 
+            "message" : "internal server error"
+        }
+        print(error_response)
+        return error_response 
 
 
 if __name__ == "__main__":

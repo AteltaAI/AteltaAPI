@@ -1,59 +1,44 @@
-import io
 import os
-
+import uvicorn
 from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
-from .config import settings
-from .db import create_db_and_tables, engine
-from .routes import main_router
+from ateltaapi.routes import main_router
 
-
-def read(*paths, **kwargs):
-    """Read the contents of a text file safely.
-    >>> read("VERSION")
-    """
-    content = ""
-    with io.open(
-        os.path.join(os.path.dirname(__file__), *paths),
-        encoding=kwargs.get("encoding", "utf8"),
-    ) as open_file:
-        content = open_file.read().strip()
-    return content
-
-
-description = """
-ateltaapi API helps you do awesome stuff. 🚀
+description = """Welcome to AteltaAPI version: 0.0.1, This is our first release of
+our API which internally uses ateltaSDK, and provides functionality for pose matching
+and other evaluation metrics.
 """
 
 app = FastAPI(
     title="ateltaapi",
     description=description,
-    version=read("VERSION"),
+    version="0.0.1",
     terms_of_service="http://ateltaapi.com/terms/",
     contact={
         "name": "AteltaAI",
         "url": "http://ateltaapi.com/contact/",
         "email": "AteltaAI@ateltaapi.com",
     },
-    license_info={
-        "name": "The Unlicense",
-        "url": "https://unlicense.org",
-    },
+    license_info={"name": "The Unlicense", "url": "https://unlicense.org",},
 )
 
-if settings.server and settings.server.get("cors_origins", None):
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.server.cors_origins,
-        allow_credentials=settings.get("server.cors_allow_credentials", True),
-        allow_methods=settings.get("server.cors_allow_methods", ["*"]),
-        allow_headers=settings.get("server.cors_allow_headers", ["*"]),
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.include_router(main_router)
 
 
 @app.on_event("startup")
-def on_startup():
-    create_db_and_tables(engine)
+def on_startup(): 
+    ...
+
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
